@@ -114,11 +114,15 @@ public class MySqlCollatorFactory implements Serializable {
 			return parseDirectory(dir);
 		} else {
 			if ("windows".equals(SystemProperty.OS_FAMILY.get())) {
-				throw new RuntimeException(String.format("%s ist not a directory, please check your %s system property (current value %s) for a valid MySQL charsets directory", dir, PROPERTY_MYSQL_HOME_DIR, System
-						.getProperty(PROPERTY_MYSQL_HOME_DIR)));
+				throw new RuntimeException(
+						String.format(
+								"%s ist not a directory, please check your %s system property (current value %s) for a valid MySQL charsets directory",
+								dir, PROPERTY_MYSQL_HOME_DIR, System.getProperty(PROPERTY_MYSQL_HOME_DIR)));
 			} else {
-				throw new RuntimeException(String.format("%s ist not a directory, please check your %s system property (current value %s) for a valid MySQL charsets directory", dir, PROPERTY_MYSQL_DIR, System
-						.getProperty(PROPERTY_MYSQL_DIR)));
+				throw new RuntimeException(
+						String.format(
+								"%s ist not a directory, please check your %s system property (current value %s) for a valid MySQL charsets directory",
+								dir, PROPERTY_MYSQL_DIR, System.getProperty(PROPERTY_MYSQL_DIR)));
 			}
 		}
 
@@ -128,13 +132,12 @@ public class MySqlCollatorFactory implements Serializable {
 		final String os = SystemProperty.OS_FAMILY.get();
 
 		if ("windows".equals(os)) {
-			return new File(System.getProperties()
-					.getProperty(PROPERTY_MYSQL_HOME_DIR, "C:\\Programme\\MySQL\\MySQL Server 5.0")
+			return new File(System.getProperties().getProperty(PROPERTY_MYSQL_HOME_DIR,
+					"C:\\Programme\\MySQL\\MySQL Server 5.0")
 					+ "\\share\\charsets");
 		} else {
-			return new File(System
-					.getProperties()
-					.getProperty(PROPERTY_MYSQL_DIR, "mac".equals(os) ? "/usr/local/mysql/share/charsets" : "/usr/share/mysql/charsets"));
+			return new File(System.getProperties().getProperty(PROPERTY_MYSQL_DIR,
+					"mac".equals(os) ? "/usr/local/mysql/share/charsets" : "/usr/share/mysql/charsets"));
 		}
 	}
 
@@ -160,8 +163,7 @@ public class MySqlCollatorFactory implements Serializable {
 			final String element = CHARSET + "/" + map;
 			digester.addObjectCreate(element, MySqlCharacterMap.class);
 			digester.addBeanPropertySetter(element + "/map");
-			digester.addSetNext(element, "set" + map.substring(0, 1).toUpperCase()
-					+ map.substring(1));
+			digester.addSetNext(element, "set" + map.substring(0, 1).toUpperCase() + map.substring(1));
 		}
 
 		digester.addObjectCreate(COLLATION, MySqlCollation.class);
@@ -182,8 +184,7 @@ public class MySqlCollatorFactory implements Serializable {
 		}
 		final MySqlCollation coll = cset.getCollations().get(collation);
 		if (coll == null) {
-			throw new IllegalArgumentException("collation not available for charset '" + charset
-					+ "': " + collation);
+			throw new IllegalArgumentException("collation not available for charset '" + charset + "': " + collation);
 		}
 		return coll.getCollatorInstance();
 	}

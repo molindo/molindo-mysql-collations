@@ -24,9 +24,9 @@ import java.io.Serializable;
 import java.text.CollationKey;
 import java.util.Arrays;
 
-public class MySqlCollationKey extends CollationKey implements Serializable {
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 
-	private static final long serialVersionUID = 1L;
+public class MySqlCollationKey extends CollationKey {
 
 	private final byte[] _weights;
 	private final int _hash;
@@ -55,6 +55,7 @@ public class MySqlCollationKey extends CollationKey implements Serializable {
 		return _hash;
 	}
 
+	@SuppressWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "performance optimization only")
 	@Override
 	public boolean equals(final Object obj) {
 		if (this == obj) {

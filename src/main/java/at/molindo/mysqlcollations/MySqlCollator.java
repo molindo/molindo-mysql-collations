@@ -22,6 +22,8 @@ package at.molindo.mysqlcollations;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+
 public class MySqlCollator implements Comparator<String>, Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	private final MySqlCollation _collation;
@@ -30,6 +32,8 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 		_collation = mySqlCollation;
 	}
 
+	@SuppressWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ", justification = "performance optimization only")
+	@Override
 	public int compare(final String source, final String target) {
 		if (source == target) {
 			return 0;
@@ -47,6 +51,7 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 		return source.length() - target.length();
 	}
 
+	@SuppressWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ", justification = "performance optimization only")
 	public boolean equals(final String source, final String target) {
 		if (source == target) {
 			return true;
@@ -73,7 +78,7 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 
 	/**
 	 * use lowest character of same weight for each character
-     */
+	 */
 	public String normalize(final String string) {
 		return _collation.normalize(string);
 	}

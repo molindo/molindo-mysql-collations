@@ -33,7 +33,7 @@ public class MySqlCollation extends MySqlCharacterMap implements Serializable {
 	 * contains the lowest character mapping for any weight - used for
 	 * normalization of
 	 */
-	private char[] _normalize;
+	volatile private char[] _normalize;
 
 	public String getName() {
 		return _name;

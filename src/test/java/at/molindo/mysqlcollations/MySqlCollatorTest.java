@@ -87,8 +87,7 @@ public class MySqlCollatorTest {
 				collator.compare(s1, s2);
 			}
 
-			System.out.println("java.text.Collator: "
-					+ (System.currentTimeMillis() - start) + "ms");
+			System.out.println("java.text.Collator: " + (System.currentTimeMillis() - start) + "ms");
 		}
 		{
 			DEFAULT.compare(s1, s2); // warmup
@@ -99,8 +98,7 @@ public class MySqlCollatorTest {
 				DEFAULT.compare(s1, s2);
 			}
 
-			System.out.println("MySqlCollator: "
-					+ (System.currentTimeMillis() - start) + "ms");
+			System.out.println("MySqlCollator: " + (System.currentTimeMillis() - start) + "ms");
 		}
 	}
 
@@ -127,9 +125,8 @@ public class MySqlCollatorTest {
 				value += k1.compareTo(k2);
 			}
 
-			System.out.println("java.text.CollationKey: "
-					+ (System.currentTimeMillis() - start) + "ms (value = " + value
-					+ ")");
+			System.out.println("java.text.CollationKey: " + (System.currentTimeMillis() - start) + "ms (value = "
+					+ value + ")");
 		}
 		{
 			final CollationKey k1 = DEFAULT.getCollationKey(s1);
@@ -145,8 +142,7 @@ public class MySqlCollatorTest {
 				value += k1.compareTo(k2);
 			}
 
-			System.out.println("MySqlCollationKey: "
-					+ (System.currentTimeMillis() - start) + "ms (value = " + value
+			System.out.println("MySqlCollationKey: " + (System.currentTimeMillis() - start) + "ms (value = " + value
 					+ ")");
 		}
 	}
