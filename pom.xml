@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>at.molindo</groupId>
 		<artifactId>molindo-oss-pom</artifactId>
-		<version>1.0-SNAPSHOT</version>
+		<version>1</version>
 	</parent>
 
 	<groupId>at.molindo</groupId>
@@ -58,6 +58,7 @@
 	</dependencies>
 
 	<properties>
+		<molindo-utils.version>1.0-alpha-1</molindo-utils.version>
 		<digester.version>1.8</digester.version>
 	</properties>
 
