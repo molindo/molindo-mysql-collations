@@ -16,7 +16,9 @@
 
 package at.molindo.mysqlcollations;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.text.CollationKey;
@@ -25,6 +27,8 @@ import java.text.Collator;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xml.sax.SAXException;
+
+import at.molindo.utils.io.CharsetUtils;
 
 public class MySqlCollatorTest {
 
@@ -67,6 +71,15 @@ public class MySqlCollatorTest {
 		assertEquals("FOOBAR", GERMAN.normalize("Foobar"));
 		assertEquals("FOOBAR", GERMAN.normalize("fo\u00F6bar"));
 		assertEquals("FOOBAR", GERMAN.normalize("fo\u00F3bar"));
+	}
+
+	@Test
+	public void testIsMappable() {
+		assertFalse(DEFAULT.isMappable("新闻"));
+
+		// test MySQL flavored latin-1 only character
+		assertTrue(DEFAULT.isMappable("Slim\u2019s"));
+		assertFalse(CharsetUtils.is("Slim\u2019s", CharsetUtils.ISO_8859_1));
 	}
 
 	// @Test

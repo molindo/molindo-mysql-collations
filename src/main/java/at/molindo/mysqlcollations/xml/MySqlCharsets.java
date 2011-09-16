@@ -17,18 +17,27 @@
 /**
  * 
  */
-package at.molindo.mysqlcollations;
+package at.molindo.mysqlcollations.xml;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * &lt;charsets&gt; from charset XML files, containing a map of
+ * {@link MySqlCharset} mapped by name
+ * 
+ * @author stf@molindo.at
+ */
 public class MySqlCharsets implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private String _copyright;
 	private Map<String, MySqlCharset> _charsets;
 
+	/**
+	 * default constructor used by XML digester
+	 */
 	public MySqlCharsets() {
 	}
 
@@ -38,7 +47,7 @@ public class MySqlCharsets implements Serializable {
 	 * @param charsets
 	 */
 	public MySqlCharsets(final MySqlCharsets... charsets) {
-		_charsets = new HashMap<String, MySqlCharset>();
+		_charsets = new HashMap<String, MySqlCharset>(charsets.length * 2);
 		for (final MySqlCharsets c : charsets) {
 			_charsets.putAll(c._charsets);
 		}
@@ -62,7 +71,7 @@ public class MySqlCharsets implements Serializable {
 
 	public void add(final MySqlCharset charset) {
 		if (_charsets == null) {
-			_charsets = new HashMap<String, MySqlCharset>();
+			_charsets = new HashMap<String, MySqlCharset>(4);
 		}
 		if (_charsets.put(charset.getName(), charset) != null) {
 			throw new IllegalArgumentException("duplicate charset name: " + charset.getName());

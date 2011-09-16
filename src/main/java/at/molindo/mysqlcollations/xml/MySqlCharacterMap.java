@@ -17,42 +17,32 @@
 /**
  * 
  */
-package at.molindo.mysqlcollations;
+package at.molindo.mysqlcollations.xml;
 
 import java.io.Serializable;
 
 public class MySqlCharacterMap implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String _map;
-	private transient int[] _values;
-
-	public String getMap() {
-		return _map;
-	}
+	private int[] _values;
 
 	public void setMap(final String map) {
-		_map = map;
-		_values = null;
+		_values = parseMapValues(map);
 	}
 
 	protected int[] getValues() {
-		if (_values == null && _map != null) {
-			_values = parseMapValues(_map);
-		}
 		return _values;
 	}
 
 	public int getValue(final int index) {
-		if (_map == null) {
+		if (_values == null) {
 			throw new IllegalStateException("no map set");
 		}
 
-		final int values[] = getValues();
-		if (index < 0 || index >= values.length) {
+		if (index < 0 || index >= _values.length) {
 			throw new ArrayIndexOutOfBoundsException(index);
 		}
-		return values[index];
+		return _values[index];
 	}
 
 	private int[] parseMapValues(final String map) {

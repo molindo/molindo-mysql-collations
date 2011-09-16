@@ -17,10 +17,18 @@
 /**
  * 
  */
-package at.molindo.mysqlcollations;
+package at.molindo.mysqlcollations.xml;
 
 import java.io.Serializable;
 
+import at.molindo.mysqlcollations.MySqlCollator;
+
+/**
+ * &lt;collation&gt; from charset XML files, basically a named
+ * {@link MySqlCharacterMap}
+ * 
+ * @author stf@molindo.at
+ */
 public class MySqlCollation extends MySqlCharacterMap implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -79,12 +87,9 @@ public class MySqlCollation extends MySqlCharacterMap implements Serializable {
 		if (_normalize == null) {
 			synchronized (this) {
 				if (_normalize == null) {
-					_normalize = new char[getValues().length];
+					_normalize = new char[MySqlCharset.MAX_CHARACTERS];
 
-					final char[] characters = getCharset().getCharacters();
-
-					for (int i = 0; i < characters.length; i++) {
-						final char c = characters[i];
+					for (char c : getCharset().getCharacters()) {
 						final int index = getWeight(c) & 0xFF;
 						final char current = _normalize[index];
 						if (current == 0x0 || current > c) {

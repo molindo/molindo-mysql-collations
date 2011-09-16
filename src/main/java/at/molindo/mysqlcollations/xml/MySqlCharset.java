@@ -17,15 +17,20 @@
 /**
  * 
  */
-package at.molindo.mysqlcollations;
+package at.molindo.mysqlcollations.xml;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * &lt;charset&gt; from charset XML files, nested inside &lt;charsets&gt; (
+ * {@link MySqlCharsets}) containing a map of {@link MySqlCollation} mapped by
+ * name. Additionally, all character maps (lower, upper, unicode and ctype)
+ * 
+ * 
+ * @author stf@molindo.at
+ */
 public class MySqlCharset implements Serializable {
 	static final int MAX_CHARACTERS = 256;
 
@@ -38,21 +43,15 @@ public class MySqlCharset implements Serializable {
 	private MySqlCharacterMap _unicode;
 	private Map<String, MySqlCollation> _collations;
 
-	private transient Charset _charset;
-	private transient char[] _charTable;
-	private transient int[] _indexTable;
+	/**
+	 * index translates to char
+	 */
+	private transient char[] _indexToChar;
 
-	private static int toBytes(final int index, final byte[] bytes) {
-		int first = -1;
-		for (int i = 0; i < bytes.length; i++) {
-			final int b = index >> (3 - i) * 8;
-			bytes[i] = (byte) (b & 0xFF);
-			if (first < 0 && bytes[i] != 0x00) {
-				first = i;
-			}
-		}
-		return first;
-	}
+	/**
+	 * char translates to index
+	 */
+	private transient Map<Character, Integer> _charToIndex;
 
 	public String getName() {
 		return _name;
@@ -62,6 +61,10 @@ public class MySqlCharset implements Serializable {
 		_name = name;
 	}
 
+	/**
+	 * @return character type map (contains leading 0x00, hence
+	 *         {@link #MAX_CHARACTERS} + 1)
+	 */
 	public MySqlCharacterMap getCtype() {
 		return _ctype;
 	}
@@ -70,6 +73,9 @@ public class MySqlCharset implements Serializable {
 		_ctype = ctype;
 	}
 
+	/**
+	 * @return maps upper case to lower case characters
+	 */
 	public MySqlCharacterMap getLower() {
 		return _lower;
 	}
@@ -78,6 +84,9 @@ public class MySqlCharset implements Serializable {
 		_lower = lower;
 	}
 
+	/**
+	 * @return maps lower case to upper case characters
+	 */
 	public MySqlCharacterMap getUpper() {
 		return _upper;
 	}
@@ -86,12 +95,30 @@ public class MySqlCharset implements Serializable {
 		_upper = upper;
 	}
 
+	/**
+	 * @return maps characters to unicode representation
+	 */
 	public MySqlCharacterMap getUnicode() {
 		return _unicode;
 	}
 
 	public void setUnicode(final MySqlCharacterMap unicode) {
 		_unicode = unicode;
+		initCharLookup();
+	}
+
+	private void initCharLookup() {
+		if (_unicode == null) {
+			_indexToChar = null;
+			_charToIndex = null;
+		} else {
+			_indexToChar = new char[MAX_CHARACTERS];
+			_charToIndex = new HashMap<Character, Integer>(MAX_CHARACTERS * 2);
+
+			for (int i = 0; i < MAX_CHARACTERS; i++) {
+				_charToIndex.put(_indexToChar[i] = (char) _unicode.getValue(i), i);
+			}
+		}
 	}
 
 	public Map<String, MySqlCollation> getCollations() {
@@ -151,7 +178,7 @@ public class MySqlCharset implements Serializable {
 	}
 
 	private int getCtypeValue(final char character) {
-		// ctype has a leading 00
+		// ctype has a leading 00, hence +1
 		return getCtype().getValue(toIndex(character) + 1);
 	}
 
@@ -163,68 +190,24 @@ public class MySqlCharset implements Serializable {
 		return toChar(getUpper().getValue(toIndex(character)));
 	}
 
+	/**
+	 * @return -1 for unmappable character
+	 */
 	public int toIndex(final char character) {
-		if (_indexTable != null) {
-			final int i = 0x00 | character;
-			if (i > 0 && i < _indexTable.length) {
-				return _indexTable[i];
-			}
-		}
-
-		final ByteBuffer buf = getCharset().encode(new String(new char[] { character }));
-
-		int index = 0x0;
-		int pos = 1;
-		while (buf.hasRemaining()) {
-			int current = 0xFF;
-			current &= buf.get();
-			current <<= (buf.capacity() - pos++) * 8;
-			index |= current;
-		}
-
-		return index;
+		Integer i = _charToIndex.get(character);
+		return i == null ? -1 : i;
 	}
 
 	public char toChar(final int index) {
-		if (_charTable != null && index >= 0 && index < _charTable.length) {
-			return _charTable[index];
-		}
-
-		final byte[] bytes = new byte[4];
-		final int first = toBytes(index, bytes);
-		if (first < 0) {
-			return 0x00;
-		}
-		return getCharset().decode(ByteBuffer.wrap(bytes, first, bytes.length - first)).get();
+		return _indexToChar[index];
 	}
 
 	public char toUnicode(final char character) {
 		return (char) getUnicode().getValue(toIndex(character));
 	}
 
-	private Charset getCharset() {
-		initCharset();
-		return _charset;
-	}
-
-	private void initCharset() {
-		if (_charset == null && getName() != null) {
-			_charset = Charset.forName(getName());
-
-			final char[] charTable = new char[MAX_CHARACTERS];
-			final int[] indexTable = new int[MAX_CHARACTERS];
-			for (int i = 0; i < MAX_CHARACTERS; i++) {
-				charTable[i] = toChar(i);
-				indexTable[i] = toIndex((char) i);
-			}
-			_charTable = charTable;
-			_indexTable = indexTable;
-		}
-	}
-
-	public char[] getCharacters() {
-		initCharset();
-		return Arrays.copyOf(_charTable, _charTable.length);
+	char[] getCharacters() {
+		return _indexToChar;
 	}
 
 	@Override

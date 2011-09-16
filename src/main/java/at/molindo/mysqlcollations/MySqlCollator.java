@@ -22,13 +22,20 @@ package at.molindo.mysqlcollations;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import at.molindo.mysqlcollations.xml.MySqlCharset;
+import at.molindo.mysqlcollations.xml.MySqlCollation;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 
+/**
+ * Collator for a single charset/collation combination
+ * 
+ * @author stf@molindo.at
+ */
 public class MySqlCollator implements Comparator<String>, Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	private final MySqlCollation _collation;
 
-	MySqlCollator(final MySqlCollation mySqlCollation) {
+	public MySqlCollator(final MySqlCollation mySqlCollation) {
 		_collation = mySqlCollation;
 	}
 
@@ -72,6 +79,9 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 		return true;
 	}
 
+	/**
+	 * @return new {@link MySqlCollationKey} for given source
+	 */
 	public MySqlCollationKey getCollationKey(final String source) {
 		return new MySqlCollationKey(source, _collation);
 	}
@@ -81,6 +91,19 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 	 */
 	public String normalize(final String string) {
 		return _collation.normalize(string);
+	}
+
+	public boolean isMappable(String string) {
+		int l = string.length();
+		MySqlCharset charset = _collation.getCharset();
+
+		for (int i = 0; i < l; i++) {
+			int v = charset.toIndex(string.charAt(i));
+			if (v < 0) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

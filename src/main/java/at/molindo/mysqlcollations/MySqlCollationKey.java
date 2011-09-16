@@ -24,6 +24,8 @@ import java.io.Serializable;
 import java.text.CollationKey;
 import java.util.Arrays;
 
+import at.molindo.mysqlcollations.xml.MySqlCollation;
+
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 
 public class MySqlCollationKey extends CollationKey {
