@@ -22,8 +22,6 @@ package at.molindo.mysqlcollations;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import at.molindo.mysqlcollations.xml.MySqlCharset;
-import at.molindo.mysqlcollations.xml.MySqlCollation;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 
 /**
@@ -35,8 +33,11 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 	private static final long serialVersionUID = 1L;
 	private final MySqlCollation _collation;
 
-	public MySqlCollator(final MySqlCollation mySqlCollation) {
-		_collation = mySqlCollation;
+	public MySqlCollator(final MySqlCollation collation) {
+		if (collation == null) {
+			throw new NullPointerException("collation");
+		}
+		_collation = collation;
 	}
 
 	@SuppressWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ", justification = "performance optimization only")
@@ -93,19 +94,6 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 		return _collation.normalize(string);
 	}
 
-	public boolean isMappable(String string) {
-		int l = string.length();
-		MySqlCharset charset = _collation.getCharset();
-
-		for (int i = 0; i < l; i++) {
-			int v = charset.toIndex(string.charAt(i));
-			if (v < 0) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	@Override
 	public MySqlCollator clone() {
 		try {
@@ -113,6 +101,19 @@ public class MySqlCollator implements Comparator<String>, Serializable, Cloneabl
 		} catch (final CloneNotSupportedException e) {
 			throw new RuntimeException("cloning Object not supported?", e);
 		}
+	}
+
+	public MySqlCollation getCollation() {
+		return _collation;
+	}
+
+	public MySqlCharset getCharset() {
+		return _collation.getCharset();
+	}
+
+	@Override
+	public String toString() {
+		return "MySqlCollator [collation=" + _collation + "]";
 	}
 
 }

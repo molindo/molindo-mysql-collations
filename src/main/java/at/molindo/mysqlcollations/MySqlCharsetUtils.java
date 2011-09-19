@@ -14,48 +14,48 @@
  * limitations under the License.
  */
 
-/**
- * 
- */
-package at.molindo.mysqlcollations.xml;
+package at.molindo.mysqlcollations;
 
-import java.io.Serializable;
-
-public class MySqlCharacterMap implements Serializable {
-	private static final long serialVersionUID = 1L;
-
-	private int[] _values;
-
-	public void setMap(final String map) {
-		_values = parseMapValues(map);
+class MySqlCharsetUtils {
+	private MySqlCharsetUtils() {
 	}
 
-	protected int[] getValues() {
-		return _values;
-	}
-
-	public int getValue(final int index) {
-		if (_values == null) {
-			throw new IllegalStateException("no map set");
+	public static byte[] toByteArray(String map) {
+		int[] values = toIntArray(map);
+		if (values == null) {
+			return null;
 		}
-
-		if (index < 0 || index >= _values.length) {
-			throw new ArrayIndexOutOfBoundsException(index);
+		byte[] bytes = new byte[values.length];
+		for (int i = 0; i < values.length; i++) {
+			bytes[i] = (byte) values[i];
 		}
-		return _values[index];
+		return bytes;
 	}
 
-	private int[] parseMapValues(final String map) {
+	public static char[] toCharArray(String map) {
+		int[] values = toIntArray(map);
+		if (values == null) {
+			return null;
+		}
+		char[] chars = new char[values.length];
+		for (int i = 0; i < values.length; i++) {
+			chars[i] = (char) values[i];
+		}
+		return chars;
+	}
+
+	public static int[] toIntArray(String map) {
 		if (map == null) {
 			return null;
 		}
 
-		final String[] str = map.split("\\s+");
-		final int[] values = new int[str.length];
+		String[] str = map.split("\\s+");
 
+		final int[] values = new int[str.length];
 		for (int i = 0; i < values.length; i++) {
 			values[i] = Integer.parseInt(str[i], 16);
 		}
 		return values;
 	}
+
 }

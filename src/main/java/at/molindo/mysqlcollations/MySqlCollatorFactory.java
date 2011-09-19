@@ -21,18 +21,20 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.io.Serializable;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.digester.Digester;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import at.molindo.mysqlcollations.xml.MySqlCharacterMap;
-import at.molindo.mysqlcollations.xml.MySqlCharset;
-import at.molindo.mysqlcollations.xml.MySqlCharsets;
-import at.molindo.mysqlcollations.xml.MySqlCollation;
+import at.molindo.mysqlcollations.xml.CharsetXmlDigester;
+import at.molindo.mysqlcollations.xml.MySqlCharsetBean;
+import at.molindo.mysqlcollations.xml.MySqlCharsetsBean;
 import at.molindo.utils.properties.SystemProperty;
 
 /**
@@ -44,19 +46,6 @@ import at.molindo.utils.properties.SystemProperty;
 public class MySqlCollatorFactory implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
-	private static class CharsetFileFilter implements FilenameFilter {
-
-		@Override
-		public boolean accept(final File dir, final String name) {
-			return name.endsWith(".xml") && !"Index.xml".equals(name);
-		}
-
-	}
-
-	private static final String CHARSETS = "charsets";
-	private static final String CHARSET = CHARSETS + "/charset";
-	private static final String COLLATION = CHARSET + "/collation";
 
 	private static final String PROPERTY_BASE = MySqlCollatorFactory.class.getPackage().getName();
 	private static final String PROPERTY_MYSQL_DIR = PROPERTY_BASE + ".mySqlDir";
@@ -192,51 +181,44 @@ public class MySqlCollatorFactory implements Serializable {
 
 	public static final String CHARSET_DIR = DIRECTORY_DEFAULT;
 
-	private MySqlCharsets _charsets;
+	private final Map<String, MySqlCharset> _charsets;
 
 	public static MySqlCollatorFactory parse(final String path) throws IOException, SAXException {
 		return parse(new File(path));
 	}
 
-	public static MySqlCollatorFactory parse(final File collation) throws IOException, SAXException {
-		return parse(new FileInputStream(collation));
+	public static MySqlCollatorFactory parse(final File file) throws IOException, SAXException {
+		if (file.isDirectory()) {
+			return new MySqlCollatorFactory(parseDirectory(file));
+		} else {
+			return new MySqlCollatorFactory(parse(new FileInputStream(file)));
+		}
 	}
 
-	public static MySqlCollatorFactory parse(final URL collation) throws IOException, SAXException {
-		return parse(collation.openStream());
+	public static MySqlCollatorFactory parse(final URL url) throws IOException, SAXException {
+		return new MySqlCollatorFactory(parse(url.openStream()));
 	}
 
-	public static MySqlCollatorFactory parse(final InputStream in) throws IOException, SAXException {
+	private static MySqlCharsetsBean parse(final InputStream in) throws IOException, SAXException {
 		return parse(new InputSource(in));
-	}
-
-	public static MySqlCollatorFactory parse(final Reader reader) throws IOException, SAXException {
-		return parse(new InputSource(reader));
-	}
-
-	public static MySqlCollatorFactory parseDirectory(final String path) throws IOException, SAXException {
-		return parseDirectory(new File(path));
 	}
 
 	/**
 	 * @return {@link MySqlCollatorFactory} containing all charsets from given
 	 *         directory considering all *.xml but Index.xml
 	 */
-	public static MySqlCollatorFactory parseDirectory(final File dir) throws IOException, SAXException {
+	private static List<MySqlCharsetsBean> parseDirectory(final File dir) throws IOException, SAXException {
 		if (!dir.isDirectory()) {
 			throw new IllegalArgumentException("not a directory = " + dir);
 		}
 
-		MySqlCollatorFactory factory = null;
-		for (final File file : dir.listFiles(new CharsetFileFilter())) {
-			final MySqlCollatorFactory current = parse(file);
-			if (factory == null) {
-				factory = current;
-			} else {
-				factory.addCharsets(current);
-			}
+		File[] files = dir.listFiles(new CharsetFileFilter());
+
+		List<MySqlCharsetsBean> charsets = new ArrayList<MySqlCharsetsBean>(files.length);
+		for (final File file : files) {
+			charsets.add(parse(new FileInputStream(file)));
 		}
-		return factory;
+		return charsets;
 	}
 
 	public static boolean isValidCharsetDirectory() {
@@ -260,7 +242,7 @@ public class MySqlCollatorFactory implements Serializable {
 		final File dir = getDirectory();
 
 		if (dir.isDirectory()) {
-			return parseDirectory(dir);
+			return parse(dir);
 		} else {
 			if ("windows".equals(SystemProperty.OS_FAMILY.get())) {
 				throw new RuntimeException(
@@ -289,58 +271,56 @@ public class MySqlCollatorFactory implements Serializable {
 		}
 	}
 
-	public static MySqlCollatorFactory parse(final InputSource source) throws IOException, SAXException {
-		final Digester digester = newDigester();
-		final MySqlCharsets charsets = (MySqlCharsets) digester.parse(source);
-		return new MySqlCollatorFactory(charsets);
+	private static MySqlCharsetsBean parse(final InputSource source) throws IOException, SAXException {
+		return (MySqlCharsetsBean) new CharsetXmlDigester().parse(source);
 	}
 
-	private static Digester newDigester() {
-		final Digester digester = new Digester();
-		digester.setValidating(false);
-		digester.setNamespaceAware(false);
+	private MySqlCollatorFactory(final MySqlCharsetsBean... charsetBeans) {
+		this(Arrays.asList(charsetBeans));
+	}
 
-		digester.addObjectCreate(CHARSETS, MySqlCharsets.class);
-		digester.addBeanPropertySetter(CHARSETS + "/copyright");
+	public MySqlCollatorFactory(List<MySqlCharsetsBean> charsetBeans) {
+		_charsets = new HashMap<String, MySqlCharset>();
 
-		digester.addObjectCreate(CHARSET, MySqlCharset.class);
-		digester.addSetProperties(CHARSET);
-		digester.addSetNext(CHARSET, "add");
-
-		for (final String map : new String[] { "ctype", "lower", "upper", "unicode" }) {
-			final String element = CHARSET + "/" + map;
-			digester.addObjectCreate(element, MySqlCharacterMap.class);
-			digester.addBeanPropertySetter(element + "/map");
-			digester.addSetNext(element, "set" + map.substring(0, 1).toUpperCase() + map.substring(1));
+		for (MySqlCharsetsBean charsets : charsetBeans) {
+			addCharsets(charsets);
 		}
-
-		digester.addObjectCreate(COLLATION, MySqlCollation.class);
-		digester.addSetProperties(COLLATION);
-		digester.addBeanPropertySetter(COLLATION + "/map");
-		digester.addSetNext(COLLATION, "add");
-		return digester;
-	}
-
-	private MySqlCollatorFactory(final MySqlCharsets charsets) {
-		_charsets = charsets;
 	}
 
 	/**
-	 * @return {@link MySqlCollator} for given charset and collation
+	 * @return {@link MySqlCharset} for given charset name
 	 * @throws IllegalArgumentException
-	 *             for unknown charsets of charset/collation combinations
+	 *             for unknown charset name
 	 */
-	// TODO get collator with collation only?
-	public MySqlCollator getCollator(final String charset, final String collation) {
-		final MySqlCharset cset = _charsets.getCharsets().get(charset);
+	public MySqlCharset getCharset(final String charset) {
+		final MySqlCharset cset = _charsets.get(charset);
 		if (cset == null) {
 			throw new IllegalArgumentException("charset not available: " + charset);
 		}
-		final MySqlCollation coll = cset.getCollations().get(collation);
-		if (coll == null) {
-			throw new IllegalArgumentException("collation not available for charset '" + charset + "': " + collation);
-		}
-		return coll.getCollatorInstance();
+		return cset;
+	}
+
+	/**
+	 * @return {@link MySqlCollation} for given charset and collation name
+	 * @throws IllegalArgumentException
+	 *             for unknown charset or collation name
+	 * @see #getCharset(String)
+	 * @see MySqlCharset#getCollation(String)
+	 */
+	public MySqlCollation getCollation(String charset, String collation) {
+		return getCharset(charset).getCollation(collation);
+	}
+
+	/**
+	 * @return {@link MySqlCollator} for given charset and collation name
+	 * @throws IllegalArgumentException
+	 *             for unknown charsets of charset/collation combinations
+	 * 
+	 * @see #getCollation(String, String)
+	 * @see MySqlCollation#getCollator()
+	 */
+	public MySqlCollator getCollator(final String charset, final String collation) {
+		return getCollation(charset, collation).getCollator();
 	}
 
 	/**
@@ -351,7 +331,23 @@ public class MySqlCollatorFactory implements Serializable {
 		return getCollator(CHARSET_DEFAULT, COLLATION_DEFAULT);
 	}
 
-	private void addCharsets(final MySqlCollatorFactory current) {
-		_charsets = new MySqlCharsets(_charsets, current._charsets);
+	private void addCharsets(final MySqlCharsetsBean charsets) {
+		for (Map.Entry<String, MySqlCharsetBean> e : charsets.getCharsets().entrySet()) {
+			_charsets.put(e.getKey(), new MySqlCharset(e.getValue()));
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "MySqlCollatorFactory [charsets=" + _charsets + "]";
+	}
+
+	private static class CharsetFileFilter implements FilenameFilter {
+
+		@Override
+		public boolean accept(final File dir, final String name) {
+			return name.endsWith(".xml") && !"Index.xml".equals(name);
+		}
+
 	}
 }

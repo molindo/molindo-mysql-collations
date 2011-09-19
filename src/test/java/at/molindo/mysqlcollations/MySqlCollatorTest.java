@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
+import at.molindo.utils.data.SerializationUtils;
 import at.molindo.utils.io.CharsetUtils;
 
 public class MySqlCollatorTest {
@@ -36,7 +37,8 @@ public class MySqlCollatorTest {
 
 	@BeforeClass
 	public static void load() throws IOException, SAXException {
-		final MySqlCollatorFactory factory = MySqlCollatorFactory.parseDefaultDirectory();
+		MySqlCollatorFactory factory = MySqlCollatorFactory.parseDefaultDirectory();
+		factory = SerializationUtils.copy(factory, MySqlCollatorFactory.class);
 		DEFAULT = factory.getDefaultCollator();
 		GERMAN = factory.getCollator("latin1", "latin1_german1_ci");
 	}
@@ -75,10 +77,8 @@ public class MySqlCollatorTest {
 
 	@Test
 	public void testIsMappable() {
-		assertFalse(DEFAULT.isMappable("新闻"));
-
 		// test MySQL flavored latin-1 only character
-		assertTrue(DEFAULT.isMappable("Slim\u2019s"));
+		assertTrue(DEFAULT.getCharset().isMappable("Slim\u2019s"));
 		assertFalse(CharsetUtils.is("Slim\u2019s", CharsetUtils.ISO_8859_1));
 	}
 

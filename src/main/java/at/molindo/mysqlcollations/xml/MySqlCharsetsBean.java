@@ -25,20 +25,20 @@ import java.util.Map;
 
 /**
  * &lt;charsets&gt; from charset XML files, containing a map of
- * {@link MySqlCharset} mapped by name
+ * {@link MySqlCharsetBean} mapped by name
  * 
  * @author stf@molindo.at
  */
-public class MySqlCharsets implements Serializable {
+public class MySqlCharsetsBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private String _copyright;
-	private Map<String, MySqlCharset> _charsets;
+	private Map<String, MySqlCharsetBean> _charsets;
 
 	/**
 	 * default constructor used by XML digester
 	 */
-	public MySqlCharsets() {
+	public MySqlCharsetsBean() {
 	}
 
 	/**
@@ -46,9 +46,9 @@ public class MySqlCharsets implements Serializable {
 	 * 
 	 * @param charsets
 	 */
-	public MySqlCharsets(final MySqlCharsets... charsets) {
-		_charsets = new HashMap<String, MySqlCharset>(charsets.length * 2);
-		for (final MySqlCharsets c : charsets) {
+	public MySqlCharsetsBean(final MySqlCharsetsBean... charsets) {
+		_charsets = new HashMap<String, MySqlCharsetBean>(charsets.length * 2);
+		for (final MySqlCharsetsBean c : charsets) {
 			_charsets.putAll(c._charsets);
 		}
 	}
@@ -61,17 +61,17 @@ public class MySqlCharsets implements Serializable {
 		_copyright = copyright;
 	}
 
-	public Map<String, MySqlCharset> getCharsets() {
+	public Map<String, MySqlCharsetBean> getCharsets() {
 		return _charsets;
 	}
 
-	public void setCharsets(final Map<String, MySqlCharset> charsets) {
+	public void setCharsets(final Map<String, MySqlCharsetBean> charsets) {
 		_charsets = charsets;
 	}
 
-	public void add(final MySqlCharset charset) {
+	public void add(final MySqlCharsetBean charset) {
 		if (_charsets == null) {
-			_charsets = new HashMap<String, MySqlCharset>(4);
+			_charsets = new HashMap<String, MySqlCharsetBean>(4);
 		}
 		if (_charsets.put(charset.getName(), charset) != null) {
 			throw new IllegalArgumentException("duplicate charset name: " + charset.getName());

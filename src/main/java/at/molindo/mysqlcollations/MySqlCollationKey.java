@@ -24,8 +24,6 @@ import java.io.Serializable;
 import java.text.CollationKey;
 import java.util.Arrays;
 
-import at.molindo.mysqlcollations.xml.MySqlCollation;
-
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 
 public class MySqlCollationKey extends CollationKey {
@@ -108,6 +106,11 @@ public class MySqlCollationKey extends CollationKey {
 	@Override
 	public byte[] toByteArray() {
 		return Arrays.copyOf(_weights, _weights.length);
+	}
+
+	@Override
+	public String toString() {
+		return "MySqlCollationKey [source=" + getSourceString() + "]";
 	}
 
 	public final Object writeReplace() throws ObjectStreamException {
